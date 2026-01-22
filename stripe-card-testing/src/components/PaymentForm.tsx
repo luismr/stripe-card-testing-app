@@ -65,7 +65,7 @@ export default function PaymentForm({ customerId, onSuccess }: PaymentFormProps)
       const paymentIntentRequest: PaymentIntentRequest = {
         amount: amountValue,
         currency,
-        customerId: saveCard ? customerId : undefined, // Only add customer if saving card
+        customerId: saveCard && customerId ? customerId : undefined, // Only add customer if saving card
         saveCard: saveCard && !!customerId, // Only save if customer is selected
       };
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { ApiResponse, PaymentIntentRequest, PaymentIntentResponse, FormState, CURRENCIES } from '@/types/stripe';
+import { ApiResponse, PaymentIntentRequest, PaymentIntentResponse, FormState, CURRENCIES, PaymentMethodsResponse } from '@/types/stripe';
 import { formatAmount } from '@/lib/stripe';
 import Stripe from 'stripe';
 
@@ -22,7 +22,7 @@ export default function OffSessionPayment({ customerId, onSuccess }: OffSessionP
   const [amount, setAmount] = useState<string>('25.00');
   const [currency, setCurrency] = useState<string>('usd');
   const [paymentMethodsLoading, setPaymentMethodsLoading] = useState(false);
-  const [authenticateUrl, setAuthenticateUrl] = useState<string | null>(null);
+  const [authenticateUrl, setAuthenticateUrl] = useState<string | undefined>(undefined);
 
   // Load payment methods when customer changes
   const loadPaymentMethods = useCallback(async () => {
@@ -34,8 +34,9 @@ export default function OffSessionPayment({ customerId, onSuccess }: OffSessionP
       const response = await fetch(`/api/payment-methods?customerId=${customerId}`);
       const result: ApiResponse = await response.json();
 
-      if (result.success) {
-        const methods = result.data.paymentMethods || [];
+      if (result.success && result.data) {
+        const data = result.data as PaymentMethodsResponse;
+        const methods = data.paymentMethods || [];
         setPaymentMethods(methods);
         
         // Clear any previous errors
@@ -77,14 +78,14 @@ export default function OffSessionPayment({ customerId, onSuccess }: OffSessionP
       setPaymentMethods([]);
       setSelectedPaymentMethodId('');
       setFormState({ loading: false, error: null, success: null });
-      setAuthenticateUrl(null);
+      setAuthenticateUrl(undefined);
       // Load payment methods for new customer
       loadPaymentMethods();
     } else {
       setPaymentMethods([]);
       setSelectedPaymentMethodId('');
       setFormState({ loading: false, error: null, success: null });
-      setAuthenticateUrl(null);
+      setAuthenticateUrl(undefined);
     }
   }, [customerId, loadPaymentMethods]);
 
@@ -113,15 +114,15 @@ export default function OffSessionPayment({ customerId, onSuccess }: OffSessionP
       error: null,
       success: null,
     });
-    setAuthenticateUrl(null);
+    setAuthenticateUrl(undefined);
 
     try {
       // Create off-session PaymentIntent with automatic confirmation
       const paymentIntentRequest: PaymentIntentRequest = {
         amount: amountValue,
         currency,
-        customerId,
-        paymentMethodId: selectedPaymentMethodId,
+        customerId: customerId || undefined,
+        paymentMethodId: selectedPaymentMethodId || undefined,
         offSession: true, // This will set off_session=true and confirm=true
       };
 
@@ -223,7 +224,7 @@ export default function OffSessionPayment({ customerId, onSuccess }: OffSessionP
       error: null,
       success: null,
     });
-    setAuthenticateUrl(null);
+    setAuthenticateUrl(undefined);
 
     // Simulate retrying the payment after some time
     setTimeout(async () => {
@@ -232,8 +233,8 @@ export default function OffSessionPayment({ customerId, onSuccess }: OffSessionP
         const paymentIntentRequest: PaymentIntentRequest = {
           amount: amountValue,
           currency,
-          customerId,
-          paymentMethodId: selectedPaymentMethodId,
+          customerId: customerId || undefined,
+          paymentMethodId: selectedPaymentMethodId || undefined,
           offSession: true,
         };
 

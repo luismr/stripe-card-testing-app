@@ -39,14 +39,15 @@ export default function CustomerSelector({
       const response = await fetch('/api/customers');
       const result: ApiResponse = await response.json();
 
-      if (result.success) {
-        const localCustomers = result.data.localCustomers || [];
-        const stripeCustomers = result.data.stripeCustomers || [];
+      if (result.success && result.data) {
+        const data = result.data as { localCustomers?: CustomerData[]; stripeCustomers?: Stripe.Customer[] };
+        const localCustomers = data.localCustomers || [];
+        const stripeCustomers = data.stripeCustomers || [];
         
         // Merge Stripe customers with local customers
         // Create a map of local customers by ID for quick lookup
         const localCustomersMap = new Map(
-          localCustomers.map(c => [c.id, c])
+          localCustomers.map((c: CustomerData) => [c.id, c])
         );
         
         // Convert Stripe customers to CustomerData format and merge
@@ -70,9 +71,9 @@ export default function CustomerSelector({
         
         // Add any local customers that aren't in Stripe (edge case)
         // Only add if they exist in Stripe (to avoid orphaned local data)
-        localCustomers.forEach(localCustomer => {
+        localCustomers.forEach((localCustomer: CustomerData) => {
           const existsInStripe = stripeCustomers.some((sc: Stripe.Customer) => sc.id === localCustomer.id);
-          if (existsInStripe && !mergedCustomers.find(c => c.id === localCustomer.id)) {
+          if (existsInStripe && !mergedCustomers.find((c: CustomerData) => c.id === localCustomer.id)) {
             mergedCustomers.push(localCustomer);
           }
         });
@@ -122,8 +123,9 @@ export default function CustomerSelector({
 
       const result: ApiResponse = await response.json();
 
-      if (result.success) {
-        setSuccess(`Customer "${result.data.local.name}" created successfully!`);
+      if (result.success && result.data) {
+        const data = result.data as { local: CustomerData };
+        setSuccess(`Customer "${data.local.name}" created successfully!`);
         setNewCustomer({ email: '', name: '' });
         setShowCreateForm(false);
         
@@ -131,7 +133,7 @@ export default function CustomerSelector({
         await loadCustomers();
         
         // Auto-select the new customer
-        onCustomerSelect(result.data.local.id);
+        onCustomerSelect(data.local.id);
       } else {
         setError(result.error || 'Failed to create customer');
       }

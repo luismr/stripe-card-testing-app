@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { ApiResponse } from '@/types/stripe';
+import { ApiResponse, PaymentMethodsResponse } from '@/types/stripe';
 import Stripe from 'stripe';
 
 interface SavedCardsListProps {
@@ -33,8 +33,9 @@ export default function SavedCardsList({
       const response = await fetch(`/api/payment-methods?customerId=${customerId}`);
       const result: ApiResponse = await response.json();
 
-      if (result.success) {
-        setPaymentMethods(result.data.paymentMethods || []);
+      if (result.success && result.data) {
+        const data = result.data as PaymentMethodsResponse;
+        setPaymentMethods(data.paymentMethods || []);
       } else {
         setError(result.error || 'Failed to load payment methods');
       }

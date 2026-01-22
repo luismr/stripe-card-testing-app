@@ -20,7 +20,7 @@ export function getStripeErrorMessage(error: StripeError | Error | unknown): str
   }
 
   // Handle Stripe.js errors
-  if ('type' in error && 'code' in error) {
+  if (typeof error === 'object' && error !== null && 'type' in error && 'code' in error) {
     const stripeError = error as StripeError;
     
     switch (stripeError.type) {
@@ -104,12 +104,22 @@ export function formatApiError(error: unknown): string {
     return error;
   }
 
-  if (error?.error) {
-    return typeof error.error === 'string' ? error.error : error.error.message || 'An error occurred';
-  }
-
-  if (error?.message) {
-    return error.message;
+  if (typeof error === 'object' && error !== null) {
+    const errorObj = error as Record<string, unknown>;
+    if ('error' in errorObj) {
+      const errorValue = errorObj.error;
+      if (typeof errorValue === 'string') {
+        return errorValue;
+      }
+      if (typeof errorValue === 'object' && errorValue !== null && 'message' in errorValue) {
+        const message = (errorValue as { message?: unknown }).message;
+        return typeof message === 'string' ? message : 'An error occurred';
+      }
+    }
+    if ('message' in errorObj) {
+      const message = errorObj.message;
+      return typeof message === 'string' ? message : 'An unexpected error occurred';
+    }
   }
 
   return 'An unexpected error occurred';
@@ -119,7 +129,7 @@ export function formatApiError(error: unknown): string {
 export function isRetryableError(error: Error | StripeError | unknown): boolean {
   if (!error) return false;
 
-  if ('type' in error) {
+  if (typeof error === 'object' && error !== null && 'type' in error) {
     const stripeError = error as StripeError;
     return stripeError.type === 'api_error' || stripeError.type === 'rate_limit_error';
   }

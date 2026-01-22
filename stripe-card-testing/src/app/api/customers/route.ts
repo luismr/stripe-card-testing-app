@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type Stripe from 'stripe';
 import { stripe } from '@/lib/stripe';
 import { CustomerDataStore } from '@/lib/data';
 import { CreateCustomerRequest, ApiResponse } from '@/types/stripe';

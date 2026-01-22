@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useStripe } from '@stripe/react-stripe-js';
-import { ApiResponse, PaymentIntentRequest, PaymentIntentResponse, FormState, CURRENCIES } from '@/types/stripe';
+import { ApiResponse, PaymentIntentRequest, PaymentIntentResponse, FormState, CURRENCIES, PaymentMethodsResponse } from '@/types/stripe';
 import { formatAmount } from '@/lib/stripe';
 import Stripe from 'stripe';
 
@@ -35,8 +35,9 @@ export default function OnSessionPayment({ customerId, onSuccess }: OnSessionPay
       const response = await fetch(`/api/payment-methods?customerId=${customerId}`);
       const result: ApiResponse = await response.json();
 
-      if (result.success) {
-        const methods = result.data.paymentMethods || [];
+      if (result.success && result.data) {
+        const data = result.data as PaymentMethodsResponse;
+        const methods = data.paymentMethods || [];
         setPaymentMethods(methods);
         
         // Clear any previous errors

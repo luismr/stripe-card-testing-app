@@ -151,12 +151,8 @@ export default function Home() {
                     <CustomerDropdown
                       selectedCustomerId={selectedCustomerId}
                       onCustomerSelect={handleCustomerSelect}
-                      onCustomerSelected={(customer) => {
-                        if (customer.id) {
-                          setSelectedCustomer(customer);
-                        } else {
-                          setSelectedCustomer(null);
-                        }
+                      onCustomerSelected={() => {
+                        // Customer selection handled by onCustomerSelect
                       }}
                     />
                   </div>

@@ -69,6 +69,7 @@ export interface CreateCustomerRequest {
 // Payment method list response
 export interface PaymentMethodsResponse {
   paymentMethods: Stripe.PaymentMethod[];
+  localData?: SavedPaymentMethod[];
 }
 
 // Webhook event data
