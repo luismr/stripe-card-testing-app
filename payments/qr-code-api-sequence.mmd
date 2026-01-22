@@ -1,0 +1,29 @@
+sequenceDiagram
+  autonumber
+  actor Merchant
+  actor Customer
+  participant Backend as Merchant_Backend
+  participant Stripe as Stripe_API
+  participant QR as QR_Code
+  participant Browser as Customer_Browser
+
+  Merchant->>Backend: Create pay link request (amount,currency,product info,success behavior)
+  Backend->>Stripe: POST /v1/payment_links (line_items, after_completion, etc.)
+  Stripe-->>Backend: PaymentLink(id, url, active=true)
+  Backend-->>Merchant: Return PaymentLink.url
+
+  Merchant->>QR: Generate QR from PaymentLink.url
+  QR-->>Merchant: QR code image/data
+  Merchant-->>Customer: Display QR code
+
+  Customer->>QR: Scan QR code
+  QR-->>Browser: Open PaymentLink.url
+  Browser->>Stripe: GET PaymentLink.url
+  Stripe-->>Browser: Hosted checkout (new Checkout Session)
+  Browser->>Stripe: Enter details and confirm payment
+  Stripe-->>Browser: Confirmation page or redirect
+
+  Stripe-->>Backend: Webhook checkout.session.completed
+  Stripe-->>Backend: Webhook checkout.session.async_payment_succeeded (if async)
+  Stripe-->>Backend: Webhook checkout.session.async_payment_failed (if async)
+  Backend-->>Backend: Fulfill order and reconcile

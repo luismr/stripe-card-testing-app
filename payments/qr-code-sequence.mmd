@@ -1,0 +1,29 @@
+sequenceDiagram
+  autonumber
+  actor Merchant
+  actor Customer
+  participant Dashboard as Stripe_Dashboard
+  participant Stripe as Stripe
+  participant QR as QR_Code
+  participant Browser as Customer_Browser
+  participant Backend as Merchant_Backend
+
+  Merchant->>Dashboard: Create or select Payment Link
+  Dashboard->>Stripe: Create or update Payment Link
+  Stripe-->>Dashboard: Payment Link URL available
+  Merchant->>Dashboard: Generate QR code for Payment Link
+  Dashboard-->>Merchant: QR code (PNG or copy)
+  Merchant-->>Customer: Display QR code (poster, receipt, screen)
+
+  Customer->>QR: Scan QR code
+  QR-->>Browser: Open Payment Link URL
+  Browser->>Stripe: GET Payment Link URL
+  Stripe-->>Browser: Redirect to hosted checkout
+  Note over Stripe,Browser: Each open creates a new Checkout Session for the hosted payment page
+  Browser->>Stripe: Enter details and confirm payment
+  Stripe-->>Browser: Show confirmation page
+
+  Stripe-->>Backend: Webhook checkout.session.completed (success)
+  Stripe-->>Backend: Webhook checkout.session.async_payment_succeeded (if async)
+  Stripe-->>Backend: Webhook checkout.session.async_payment_failed (if async)
+  Backend-->>Backend: Fulfill order and reconcile payment

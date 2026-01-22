@@ -1,0 +1,1 @@
+Stripe payment APIs: PaymentIntent (charges), SetupIntent (save cards), PaymentMethod (pm_xxx), Customer (cus_xxx). Use PaymentIntent+setup_future_usage for checkout+save, SetupIntent for vault-only. Store only IDs, never tokens or raw data.

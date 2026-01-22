@@ -1,0 +1,1 @@
+PoC: Test Stripe Card-on-File flows—SetupIntent (save card), PaymentIntent+setup_future_usage (checkout+save), on/off-session charges. Today: Terminal SDK (POS payments) + Frontend SDK (Stripe.js/web) examples with webhooks.

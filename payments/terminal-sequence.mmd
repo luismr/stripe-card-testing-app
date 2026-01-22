@@ -1,0 +1,48 @@
+sequenceDiagram
+  autonumber
+  actor Customer
+  participant POS as POS_App
+  participant Backend as Merchant_Backend
+  participant Stripe as Stripe_API
+  participant Reader as Terminal_Reader
+  Note over POS,Backend: Prerequisites configured (locations, readers, webhooks)
+  POS->>Backend: Request connection token
+  Backend->>Stripe: Create connection token
+  Stripe-->>Backend: connection_token
+  Backend-->>POS: connection_token
+  POS->>POS: Discover readers
+  alt Reader found
+    POS->>Reader: connectReader
+    Reader-->>POS: Connected
+  else Reader not found
+    POS-->>POS: Retry discovery or show error
+  end
+  POS->>Backend: Create PaymentIntent
+  Backend->>Stripe: POST PaymentIntent
+  Stripe-->>Backend: PaymentIntent + client_secret
+  Backend-->>POS: client_secret
+  POS->>Reader: collectPaymentMethod
+  Reader->>Customer: Prompt tap insert swipe
+  Customer-->>Reader: Present card
+  alt Collection success
+    Reader-->>POS: PaymentIntent requires_confirmation
+  else Collection failed
+    Reader-->>POS: Error
+  end
+  POS->>Reader: processPayment
+  alt Processing success
+    Reader-->>POS: PaymentIntent succeeded or requires_capture
+  else Processing failed
+    Reader-->>POS: Error or declined
+  end
+  alt Manual capture required
+    POS->>Backend: Capture PaymentIntent
+    Backend->>Stripe: POST capture
+    Stripe-->>Backend: PaymentIntent succeeded
+    Backend-->>POS: Capture result
+  else Automatic capture
+    POS-->>POS: No capture step
+  end
+  POS-->>Customer: Show receipt
+  Stripe-->>Backend: Webhook payment_intent events
+  Backend-->>Backend: Finalize order

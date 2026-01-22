@@ -1,0 +1,32 @@
+sequenceDiagram
+  autonumber
+  actor Merchant
+  actor Customer
+  participant Backend as Merchant_Backend
+  participant Stripe as Stripe_API
+  participant Email as Stripe_Email
+  participant Browser as Customer_Browser
+
+  Merchant->>Backend: Create invoice request
+  Backend->>Stripe: Create Customer
+  Stripe-->>Backend: Customer id
+
+  Backend->>Stripe: Create Invoice (customer, due date, settings)
+  Stripe-->>Backend: Invoice id (draft)
+
+  Backend->>Stripe: Create Invoice Items
+  Stripe-->>Backend: Invoice items created
+
+  Backend->>Stripe: Finalize Invoice
+  Stripe-->>Backend: Invoice finalized (open)
+
+  Stripe->>Email: Send invoice email with hosted payment link
+  Email-->>Customer: Invoice invite to pay
+
+  Customer->>Browser: Open invoice payment link
+  Browser->>Stripe: Load hosted invoice page
+  Customer->>Stripe: Enter payment details and confirm
+  Stripe-->>Browser: Payment confirmation page
+
+  Stripe-->>Backend: Webhook invoice.paid
+  Backend-->>Backend: Fulfill order and mark invoice paid
