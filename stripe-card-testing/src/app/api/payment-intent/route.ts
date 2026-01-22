@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare PaymentIntent parameters
-    const paymentIntentParams: any = {
+    const paymentIntentParams: Stripe.PaymentIntentCreateParams = {
       amount: Math.round(body.amount * 100), // Convert to cents
       currency: body.currency || 'usd',
       payment_method_types: ['card'],
@@ -45,8 +45,8 @@ export async function POST(request: NextRequest) {
           );
         }
         paymentIntentParams.customer = body.customerId;
-      } catch (error: any) {
-        const errorMessage = error?.message || 'Customer not found';
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Customer not found';
         return NextResponse.json<ApiResponse>(
           {
             success: false,
@@ -83,8 +83,8 @@ export async function POST(request: NextRequest) {
         }
         
         paymentIntentParams.payment_method = body.paymentMethodId;
-      } catch (error: any) {
-        const errorMessage = error?.message || 'Payment method not found';
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Payment method not found';
         return NextResponse.json<ApiResponse>(
           {
             success: false,

@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     // Verify customer exists
     try {
       await stripe.customers.retrieve(body.customerId);
-    } catch (error) {
+    } catch {
       return NextResponse.json<ApiResponse>(
         {
           success: false,

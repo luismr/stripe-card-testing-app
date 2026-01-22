@@ -99,7 +99,7 @@ function getCardErrorMessage(code: string): string {
 }
 
 // Format API error responses
-export function formatApiError(error: any): string {
+export function formatApiError(error: unknown): string {
   if (typeof error === 'string') {
     return error;
   }

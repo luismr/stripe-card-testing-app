@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useStripe } from '@stripe/react-stripe-js';
 import { ApiResponse, PaymentIntentRequest, PaymentIntentResponse, FormState, CURRENCIES } from '@/types/stripe';
 import { formatAmount } from '@/lib/stripe';
@@ -26,6 +26,52 @@ export default function OnSessionPayment({ customerId, onSuccess }: OnSessionPay
   const [currency, setCurrency] = useState<string>('usd');
   const [paymentMethodsLoading, setPaymentMethodsLoading] = useState(false);
 
+  const loadPaymentMethods = useCallback(async () => {
+    if (!customerId) return;
+
+    setPaymentMethodsLoading(true);
+    
+    try {
+      const response = await fetch(`/api/payment-methods?customerId=${customerId}`);
+      const result: ApiResponse = await response.json();
+
+      if (result.success) {
+        const methods = result.data.paymentMethods || [];
+        setPaymentMethods(methods);
+        
+        // Clear any previous errors
+        setFormState((prev) => ({
+          ...prev,
+          error: null,
+        }));
+        
+        // Auto-select first payment method if available
+        if (methods.length > 0) {
+          setSelectedPaymentMethodId((prev) => prev || methods[0].id);
+        } else {
+          setFormState((prev) => ({
+            ...prev,
+            error: 'No payment methods found for this customer. Please save a card first.',
+          }));
+        }
+      } else {
+        const errorMsg = result.error || 'Failed to load payment methods';
+        setFormState((prev) => ({
+          ...prev,
+          error: errorMsg,
+        }));
+      }
+    } catch (err) {
+      setFormState((prev) => ({
+        ...prev,
+        error: 'Network error while loading payment methods',
+      }));
+      console.error('Load payment methods error:', err);
+    } finally {
+      setPaymentMethodsLoading(false);
+    }
+  }, [customerId]);
+
   // Load payment methods when customer changes
   useEffect(() => {
     if (customerId) {
@@ -40,53 +86,7 @@ export default function OnSessionPayment({ customerId, onSuccess }: OnSessionPay
       setSelectedPaymentMethodId('');
       setFormState({ loading: false, error: null, success: null });
     }
-  }, [customerId]);
-
-  const loadPaymentMethods = async () => {
-    if (!customerId) return;
-
-    setPaymentMethodsLoading(true);
-    
-    try {
-      const response = await fetch(`/api/payment-methods?customerId=${customerId}`);
-      const result: ApiResponse = await response.json();
-
-      if (result.success) {
-        const methods = result.data.paymentMethods || [];
-        setPaymentMethods(methods);
-        
-        // Clear any previous errors
-        setFormState({
-          ...formState,
-          error: null,
-        });
-        
-        // Auto-select first payment method if available
-        if (methods.length > 0 && !selectedPaymentMethodId) {
-          setSelectedPaymentMethodId(methods[0].id);
-        } else if (methods.length === 0) {
-          setFormState({
-            ...formState,
-            error: 'No payment methods found for this customer. Please save a card first.',
-          });
-        }
-      } else {
-        const errorMsg = result.error || 'Failed to load payment methods';
-        setFormState({
-          ...formState,
-          error: errorMsg,
-        });
-      }
-    } catch (err) {
-      setFormState({
-        ...formState,
-        error: 'Network error while loading payment methods',
-      });
-      console.error('Load payment methods error:', err);
-    } finally {
-      setPaymentMethodsLoading(false);
-    }
-  };
+  }, [customerId, loadPaymentMethods]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();

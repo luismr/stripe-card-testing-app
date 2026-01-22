@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ApiResponse, PaymentIntentRequest, PaymentIntentResponse, FormState, CURRENCIES } from '@/types/stripe';
 import { formatAmount } from '@/lib/stripe';
 import Stripe from 'stripe';
@@ -25,6 +25,52 @@ export default function OffSessionPayment({ customerId, onSuccess }: OffSessionP
   const [authenticateUrl, setAuthenticateUrl] = useState<string | null>(null);
 
   // Load payment methods when customer changes
+  const loadPaymentMethods = useCallback(async () => {
+    if (!customerId) return;
+
+    setPaymentMethodsLoading(true);
+    
+    try {
+      const response = await fetch(`/api/payment-methods?customerId=${customerId}`);
+      const result: ApiResponse = await response.json();
+
+      if (result.success) {
+        const methods = result.data.paymentMethods || [];
+        setPaymentMethods(methods);
+        
+        // Clear any previous errors
+        setFormState((prev) => ({
+          ...prev,
+          error: null,
+        }));
+        
+        // Auto-select first payment method if available
+        if (methods.length > 0) {
+          setSelectedPaymentMethodId((prev) => prev || methods[0].id);
+        } else {
+          setFormState((prev) => ({
+            ...prev,
+            error: 'No payment methods found for this customer. Please save a card first.',
+          }));
+        }
+      } else {
+        const errorMsg = result.error || 'Failed to load payment methods';
+        setFormState((prev) => ({
+          ...prev,
+          error: errorMsg,
+        }));
+      }
+    } catch (err) {
+      setFormState((prev) => ({
+        ...prev,
+        error: 'Network error while loading payment methods',
+      }));
+      console.error('Load payment methods error:', err);
+    } finally {
+      setPaymentMethodsLoading(false);
+    }
+  }, [customerId]);
+
   useEffect(() => {
     if (customerId) {
       // Clear previous state when customer changes
@@ -40,53 +86,7 @@ export default function OffSessionPayment({ customerId, onSuccess }: OffSessionP
       setFormState({ loading: false, error: null, success: null });
       setAuthenticateUrl(null);
     }
-  }, [customerId]);
-
-  const loadPaymentMethods = async () => {
-    if (!customerId) return;
-
-    setPaymentMethodsLoading(true);
-    
-    try {
-      const response = await fetch(`/api/payment-methods?customerId=${customerId}`);
-      const result: ApiResponse = await response.json();
-
-      if (result.success) {
-        const methods = result.data.paymentMethods || [];
-        setPaymentMethods(methods);
-        
-        // Clear any previous errors
-        setFormState({
-          ...formState,
-          error: null,
-        });
-        
-        // Auto-select first payment method if available
-        if (methods.length > 0 && !selectedPaymentMethodId) {
-          setSelectedPaymentMethodId(methods[0].id);
-        } else if (methods.length === 0) {
-          setFormState({
-            ...formState,
-            error: 'No payment methods found for this customer. Please save a card first.',
-          });
-        }
-      } else {
-        const errorMsg = result.error || 'Failed to load payment methods';
-        setFormState({
-          ...formState,
-          error: errorMsg,
-        });
-      }
-    } catch (err) {
-      setFormState({
-        ...formState,
-        error: 'Network error while loading payment methods',
-      });
-      console.error('Load payment methods error:', err);
-    } finally {
-      setPaymentMethodsLoading(false);
-    }
-  };
+  }, [customerId, loadPaymentMethods]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -266,7 +266,7 @@ export default function OffSessionPayment({ customerId, onSuccess }: OffSessionP
             success: null,
           });
         }
-      } catch (error) {
+      } catch {
         setFormState({
           loading: false,
           error: 'Retry failed. Please try again later.',
@@ -339,7 +339,7 @@ export default function OffSessionPayment({ customerId, onSuccess }: OffSessionP
           </p>
           <ul className="text-xs text-yellow-600 dark:text-yellow-400 mb-3 space-y-1">
             <li>• Customer receives secure email/SMS with authentication link</li>
-            <li>• Customer authenticates via their bank's 3DS flow</li>
+            <li>• Customer authenticates via their bank&apos;s 3DS flow</li>
             <li>• Payment auto-completes after successful authentication</li>
             <li>• You receive webhook events with final payment status</li>
           </ul>

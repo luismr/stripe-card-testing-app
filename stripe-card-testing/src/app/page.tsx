@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Elements } from '@stripe/react-stripe-js';
 import { getStripe, ELEMENTS_APPEARANCE } from '@/lib/stripe';
 import CustomerDropdown from '@/components/CustomerDropdown';
@@ -15,10 +15,9 @@ import OffSessionPayment from '@/components/OffSessionPayment';
 
 export default function Home() {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
-  const [selectedCustomer, setSelectedCustomer] = useState<{ id: string; name: string; email: string } | null>(null);
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
-  const [stripePromise, setStripePromise] = useState(() => getStripe());
+  const [stripePromise] = useState(() => getStripe());
   const [activeCardTab, setActiveCardTab] = useState<'setup' | 'payment'>('setup');
   const [activeMainTab, setActiveMainTab] = useState<'save' | 'pay' | 'manage'>('save');
   const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
@@ -28,28 +27,6 @@ export default function Home() {
   // Handle customer selection
   const handleCustomerSelect = (customerId: string | null) => {
     setSelectedCustomerId(customerId);
-    
-    // Find and store customer details
-    if (customerId) {
-      // We'll fetch customer details when needed
-      fetch(`/api/customers?id=${customerId}`)
-        .then(res => res.json())
-        .then(result => {
-          if (result.success && result.data) {
-            const customer = result.data;
-            setSelectedCustomer({
-              id: customer.id || customerId,
-              name: customer.name || customer.email || 'Unknown',
-              email: customer.email || '',
-            });
-          }
-        })
-        .catch(() => {
-          setSelectedCustomer(null);
-        });
-    } else {
-      setSelectedCustomer(null);
-    }
   };
 
   // Trigger refresh of saved cards list when cards are modified

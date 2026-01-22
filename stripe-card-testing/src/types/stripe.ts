@@ -25,7 +25,7 @@ export interface SavedPaymentMethod {
 }
 
 // API Response types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -75,7 +75,7 @@ export interface PaymentMethodsResponse {
 export interface WebhookEventData {
   type: string;
   data: {
-    object: any;
+    object: Stripe.Event.Data.Object;
   };
   created: number;
 }

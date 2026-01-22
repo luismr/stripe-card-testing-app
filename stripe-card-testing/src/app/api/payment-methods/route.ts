@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
-import { PaymentMethodDataStore, CustomerDataStore } from '@/lib/data';
+import { PaymentMethodDataStore } from '@/lib/data';
 import { ApiResponse, PaymentMethodsResponse, SavedPaymentMethod } from '@/types/stripe';
 
 export async function GET(request: NextRequest) {
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       // First verify customer exists
       try {
         await stripe.customers.retrieve(customerId);
-      } catch (error: any) {
+      } catch {
         return NextResponse.json<ApiResponse>(
           {
             success: false,

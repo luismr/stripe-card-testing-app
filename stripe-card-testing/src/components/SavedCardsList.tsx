@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ApiResponse } from '@/types/stripe';
 import Stripe from 'stripe';
 
@@ -23,18 +23,7 @@ export default function SavedCardsList({
   const [success, setSuccess] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // Load payment methods when customer changes
-  useEffect(() => {
-    if (customerId) {
-      loadPaymentMethods();
-    } else {
-      setPaymentMethods([]);
-      setError(null);
-      setSuccess(null);
-    }
-  }, [customerId]);
-
-  const loadPaymentMethods = async () => {
+  const loadPaymentMethods = useCallback(async () => {
     if (!customerId) return;
 
     setLoading(true);
@@ -55,7 +44,18 @@ export default function SavedCardsList({
     } finally {
       setLoading(false);
     }
-  };
+  }, [customerId]);
+
+  // Load payment methods when customer changes
+  useEffect(() => {
+    if (customerId) {
+      loadPaymentMethods();
+    } else {
+      setPaymentMethods([]);
+      setError(null);
+      setSuccess(null);
+    }
+  }, [customerId, loadPaymentMethods]);
 
   const handleSetDefault = async (paymentMethodId: string) => {
     if (!customerId) return;

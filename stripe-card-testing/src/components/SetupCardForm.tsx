@@ -167,7 +167,7 @@ export default function SetupCardForm({ customerId, onSuccess }: SetupCardFormPr
 
       <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900 rounded-lg">
         <p className="text-sm text-blue-800 dark:text-blue-200">
-          <strong>SetupIntent Flow:</strong> Save a card without charging it. Perfect for "Add card to wallet" scenarios.
+          <strong>SetupIntent Flow:</strong> Save a card without charging it. Perfect for &quot;Add card to wallet&quot; scenarios.
         </p>
       </div>
 

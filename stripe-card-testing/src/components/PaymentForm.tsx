@@ -261,7 +261,7 @@ export default function PaymentForm({ customerId, onSuccess }: PaymentFormProps)
           </label>
           {saveCard && customerId && (
             <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-              Card will be saved using setup_future_usage: 'off_session'
+              Card will be saved using setup_future_usage: &apos;off_session&apos;
             </p>
           )}
         </div>

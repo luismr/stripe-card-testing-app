@@ -25,13 +25,13 @@ export async function GET(request: NextRequest) {
       const localCustomers = CustomerDataStore.getAll();
       
       // Fetch from Stripe - get all customers (paginate if needed)
-      let allStripeCustomers: any[] = [];
+      let allStripeCustomers: Stripe.Customer[] = [];
       let hasMore = true;
       let startingAfter: string | undefined = undefined;
       
       try {
         while (hasMore) {
-          const params: any = {
+          const params: Stripe.CustomerListParams = {
             limit: 100, // Maximum per page
           };
           

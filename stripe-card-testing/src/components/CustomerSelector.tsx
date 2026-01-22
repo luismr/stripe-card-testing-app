@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import type Stripe from 'stripe';
 import { CustomerData, ApiResponse, CreateCustomerRequest } from '@/types/stripe';
 
 interface CustomerSelectorProps {
@@ -49,7 +50,7 @@ export default function CustomerSelector({
         );
         
         // Convert Stripe customers to CustomerData format and merge
-        const mergedCustomers: CustomerData[] = stripeCustomers.map((stripeCustomer: any) => {
+        const mergedCustomers: CustomerData[] = stripeCustomers.map((stripeCustomer: Stripe.Customer) => {
           const localData = localCustomersMap.get(stripeCustomer.id);
           
           // If we have local data, use it; otherwise create from Stripe data
@@ -70,7 +71,7 @@ export default function CustomerSelector({
         // Add any local customers that aren't in Stripe (edge case)
         // Only add if they exist in Stripe (to avoid orphaned local data)
         localCustomers.forEach(localCustomer => {
-          const existsInStripe = stripeCustomers.some((sc: any) => sc.id === localCustomer.id);
+          const existsInStripe = stripeCustomers.some((sc: Stripe.Customer) => sc.id === localCustomer.id);
           if (existsInStripe && !mergedCustomers.find(c => c.id === localCustomer.id)) {
             mergedCustomers.push(localCustomer);
           }

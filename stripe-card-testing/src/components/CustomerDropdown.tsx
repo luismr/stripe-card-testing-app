@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import type Stripe from 'stripe';
 import { CustomerData, ApiResponse, CreateCustomerRequest } from '@/types/stripe';
 
 interface CustomerDropdownProps {
@@ -67,7 +68,7 @@ export default function CustomerDropdown({
           localCustomers.map(c => [c.id, c])
         );
         
-        const mergedCustomers: CustomerData[] = stripeCustomers.map((stripeCustomer: any) => {
+        const mergedCustomers: CustomerData[] = stripeCustomers.map((stripeCustomer: Stripe.Customer) => {
           const localData = localCustomersMap.get(stripeCustomer.id);
           
           if (localData) {
@@ -84,7 +85,7 @@ export default function CustomerDropdown({
         });
         
         localCustomers.forEach(localCustomer => {
-          const existsInStripe = stripeCustomers.some((sc: any) => sc.id === localCustomer.id);
+          const existsInStripe = stripeCustomers.some((sc: Stripe.Customer) => sc.id === localCustomer.id);
           if (existsInStripe && !mergedCustomers.find(c => c.id === localCustomer.id)) {
             mergedCustomers.push(localCustomer);
           }
